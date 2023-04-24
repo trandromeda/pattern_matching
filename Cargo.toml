@@ -12,3 +12,4 @@ render = []
 [dependencies]
 bevy = "0.10.1"
 bevy_ecs_tilemap = "0.10.0"
+rand = "0.8.5"

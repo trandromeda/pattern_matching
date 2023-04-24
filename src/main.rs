@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 
+mod worldgen;
 // mod helpers;
 
 fn main() {
@@ -16,7 +17,9 @@ fn main() {
         .add_plugin(TilemapPlugin)
         .add_startup_system(startup)
         // .add_system(helpers::camera::movement)
-        .add_system(swap_texture_or_hide).run();
+        .add_system(swap_texture_or_hide)
+        .add_system(reload_world)
+        .run();
 }
 
 fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -55,7 +58,7 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
         }
     }
 
-    let tile_size = TilemapTileSize { x: 64.0, y: 16.0 };
+    let tile_size = TilemapTileSize { x: 16.0, y: 16.0 };
     let grid_size = tile_size.into();
     let map_type = TilemapType::default();
 
@@ -69,6 +72,21 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
         transform: get_tilemap_center_transform(&map_size, &grid_size, &map_type, 0.0),
         ..Default::default()
     });
+}
+
+fn reload_world(
+    mut commands: Commands,
+    keyboard_input: Res<Input<KeyCode>>,
+    query: Query<&TileStorage>,
+) {
+    if keyboard_input.just_pressed(KeyCode::R) {
+        let tile_storage = query.single();
+        let new_map = worldgen::new_world(tile_storage.size);
+        for (tile_pos, texture_ind) in new_map {
+            let tile = tile_storage.get(&tile_pos).unwrap();
+            commands.entity(tile).insert(texture_ind);
+        }
+    }
 }
 
 fn swap_texture_or_hide(
